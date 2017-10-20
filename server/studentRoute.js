@@ -1,45 +1,45 @@
 'use strict'
-const api = require('express').Router()
-const db = require('../db')
-const Student = require('../db/models/student')
+const api = require('express').Router();
+const Student = require('../db/models').Student;
+const Campus = require('../db/models').Campus;
 
 /*
-GET ALL STUDENTS
+GET ALL Student
 ===========================================================================
 */
 api.get('/', (req, res, next) => {
 
-    Student.findAll({where: req.body})
-        .then(students => {
-            res.json(students)
+    Student.findAll()
+        .then(Students => {
+            res.json(Students)
         })
         .catch(next)
 });
 
 /*
-GET ONE STUDENTS
+GET ONE Student
 ===========================================================================
 */
 api.get('/:studentId', (req, res, next) => {
 
-    const studentId = req.params.StudentId
+    const studentId = Number(req.params.studentId);
 
     Student.findById(studentId)
-        .then(student => {
+        .then(student =>
             res.json(student)
-        })
+        )
         .catch(next)
 });
 
-/*
-CREATE A NEW STUDENT
-===========================================================================
-*/
+// /*
+// CREATE A NEW STUDENT
+// ===========================================================================
+// */
 api.post('/', (req, res, next) => {
 
     Student.create(req.body)
-        .then(() => {
-            res.redirect('/');
+        .then(newStudent => {
+            res.json(newStudent);
         })
         .catch(next)
 });
@@ -50,17 +50,43 @@ UPDATE A STUDENT
 */
 api.put('/:studentId', (req, res, next) => {
 
-    const studentId = req.params.StudentId
+    const {campus} = req.body;
 
-    Student.findById(studentId)
+    let campusId = null;
+
+    Campus.findOne({
+        where: {
+            name: campus
+        }
+    })
+        .then(foundCampus => {
+            return foundCampus ? foundCampus.id : 0;
+        })
+        .then(_campusId => {
+            campusId = _campusId;
+            return Student.findById(Number(req.params.studentId));
+        })
         .then(student => {
-            return student.update(req.body)
+            student.update({
+                name: req.body.name || student.name,
+                email: req.body.email || student.email,
+                campusId: campusId || student.campusId
+            });
         })
-        .then(updatedStudent => {
-            alert('update successful')
-            res.redirect('/');
-        })
-        .catch(next)
+        .then(() => res.sendStatus(200))
+        .catch(next);
+});
+
+api.put('/removeCampus/:studentId', (req, res, next) => {
+
+    const id = Number(req.params.studentId);
+
+    Student.findById(id)
+        .then(student =>
+            student.update({campusId: null}))
+        .then(() => res.sendStatus(200))
+        .catch(next);
+
 });
 
 
@@ -70,17 +96,16 @@ DELETE A STUDENT
 */
 api.delete('/:studentId', (req, res, next) => {
 
-    const studentId = req.params.studentId;
+        const studentId = Number(req.params.studentId);
 
-    Student.findById(studentId)
-        .then(student => {
-            return student.destroy()
+        Student.destroy({
+            where: {
+                id: studentId
+            }
         })
-        .then(()=> {
-            alert('student removed')
-            res.redirect('/');
-        })
-        .catch(next)
+            .then(() => res.sendStatus(200))
+            .catch(next);
+
 });
 
 module.exports = api;

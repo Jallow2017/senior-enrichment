@@ -1,23 +1,31 @@
 'use strict';
-var Sequelize = require('sequelize')
-var db = require('../index.js')
+var Sequelize = require('sequelize');
+var db = require('../index.js');
 
 
-module.exports = db.define('campus', {
+module.exports = db.define('campuses', {
 
     name:{
         type: Sequelize.STRING,
-        allowNull: false
+        allowNull: false,
+        validate: {
+
+        }
     },
 
-    location:{
+    image:{
         type: Sequelize.STRING,
-        allowNull: false
+        defaultValue: 'https://tctechcrunch2011.files.wordpress.com/2016/06/fullstack_academy_2015.jpg'
     },
 
-    image_url:{
-        type: Sequelize.STRING,
-        allowNull: true
-    }
+    // location:{
+    //     type: Sequelize.STRING,
+    //     allowNull: false,
+    // },
+    //
+    // description:{
+    //     type: Sequelize.STRING,
+    //     allowNull: false,
+    // }
 });
 

@@ -1,7 +1,7 @@
-'use strict'
-const api = require('express').Router()
-const db = require('../db')
-const Campus = require('../db/models/campus')
+'use strict';
+const api = require('express').Router();
+const Campus = require('../db/models').Campus;
+const Student = require('../db/models').Student;
 
 
 /*
@@ -24,13 +24,20 @@ GET ONE CAMPUS
 */
 api.get('/:campusId', (req, res, next) => {
 
-    const campusId = +(req.params.campusId)
+    const selectedCampus = Campus.findById(Number(req.params.campusId));
+    const campusStudents = selectedCampus.then(campus => {
 
-    Campus.findById(campusId)
-        .then(campus => {
-            res.json(campus)
-        })
-        .catch(next)
+        return Student.findAll({
+            where: {
+                campusId: campus.id
+            }
+        });
+    });
+
+    Promise.all([selectedCampus, campusStudents])
+        .then((arrOfResults) =>
+            res.json(arrOfResults))
+        .catch(next);
 });
 
 /*
@@ -40,11 +47,10 @@ CREATE A NEW CAMPUS
 api.post('/', (req, res, next) => {
 
     Campus.create(req.body)
-        .then(createdCampus => {
-            alert(createdCampus, ' successfully created')
-            res.redirect('/');
+        .then(newCampus => {
+            res.json(newCampus);
         })
-        .catch(next)
+        .catch(next);
 });
 
 /*
@@ -53,17 +59,28 @@ UPDATE A CAMPUS
 */
 api.put('/:campusId', (req, res, next) => {
 
-    const campusId = req.params.campusId
+    //const campusId = Number(req.params.campusId)
 
-    Campus.findById(campusId)
+    const {name, image, campusId, students} = req.body;
+
+    Campus.findById(Number(campusId))
         .then(campus => {
-            return campus.update(req.body)
+            return campus.update({
+                name: name || campus.name,
+                image: image || campus.image
+            });
         })
-        .then(updatedCampus => {
-            alert('update successful')
-            res.redirect('/');
+        .then(() => {
+            return students.map(student => {
+                Student.update({campusId}, {
+                    where: {
+                        name: student
+                    }
+                });
+            });
         })
-        .catch(next)
+        .then(() => res.sendStatus(200))
+        .catch(next);
 });
 
 
@@ -73,18 +90,20 @@ DELETE A CAMPUS
 */
 api.delete('/:campusId', (req, res, next) => {
 
-    const campusId = +(req.params.campusId)
+    const campusId = Number(req.params.campusId)
 
-    Campus.findById(campusId)
-        .then(campus => {
-            return campus.destroy()
-        })
-        .then(()=> {
-            alert('campus removed')
-            res.redirect('/');
-        })
-        .catch(next)
+    Campus.destroy({
+        where: {
+            id: campusId
+        }
+    })
+        .then(() => res.sendStatus(200))
+        .catch(next);
+
 });
 
 
 module.exports = api;
+
+
+

@@ -1,5 +1,5 @@
 'use strict'
-const api = require('express').Router()
+const api = require('express').Router();
 const db = require('../db');
 
 // If you aren't getting to this object, but rather the index.html (something with a joke) your path is wrong.

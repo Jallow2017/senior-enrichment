@@ -7,8 +7,8 @@
 
 // This is also probably a good place for you to set up your associations
 
-const Campus = require('./campus')
-const Student = require('./student')
+const Campus = require('./campus');
+const Student = require('./student');
 
 /*
 * A student must have at least a campus
@@ -21,7 +21,7 @@ Campus.hasMany(Student);
 module.exports = {
     Student,
     Campus
-}
+};
 
 
 
